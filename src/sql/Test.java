@@ -37,11 +37,12 @@ public class Test {
 //		System.out.println(d.getKLeiterByID(k.getId()).getVorname());
 //		System.out.println(d.getRechungByKindID(1).get(0).getBetrag());
 		//System.out.println(d.getElternteilByKindId(1).getNachname());
-//		Elternteil e = d.addElternteil("Maria", "Musterman", "w", 800, "mmuster", "mpass");
+		Elternteil e = d.addElternteil("Testvorname", "Testnachname", "w", 450, "testuser", "12345");
 //		Kind k = d.addKind("Max", "Musterman", Calendar.getInstance(), 2, e);
 //		d.addKindToGruppe(k, d.getGruppeByID(1));
 //		System.out.println(d.getBundeslandById(1).getKrzl());
-		System.out.println(d.getPriceByKindID(1,2));
+//		System.out.println(d.getPriceByKindID(1,2));
+		System.out.println(d.authentifizierenKLeiter("blee", "12345"));
 		d.disconnect();
 		
 
