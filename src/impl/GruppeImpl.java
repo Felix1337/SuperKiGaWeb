@@ -1,19 +1,19 @@
 package impl;
 
 import interfaces.Gruppe;
+import interfaces.Tageszeit;
 
 public class GruppeImpl implements Gruppe{
 
 	private String name;
-	private String zeit;
 	private Integer id;
 	private Integer stunden;
-	
+	private Tageszeit tageszeit;
 
-	public GruppeImpl(String name, int id, String zeit, int stunden) {
+	public GruppeImpl(String name, int id, Tageszeit tageszeit, int stunden) {
 		this.name = name;
 		this.id = id;
-		this.zeit = zeit;
+		this.tageszeit = tageszeit;
 		this.stunden = stunden;
 	}
 	
@@ -36,8 +36,8 @@ public class GruppeImpl implements Gruppe{
 		return name;
 	}
 	@Override
-	public String getZeit() {
-		return zeit;
+	public Tageszeit getZeit() {
+		return tageszeit;
 	}
 
 	@Override
