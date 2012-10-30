@@ -254,13 +254,13 @@ public class DBConnectorImpl {
 	}
 	
 	public Kita addKita(String bezeichnung, KLeiter k, Bundesland b) throws SQLException{
-		String query = "insert into Kita(ID,Bezeichnung,KLeiter,Bundesland) values(NULL,?,?,?";
+		String query = "insert into Kita(ID,Bezeichnung,KLeiter,Bundesland) values(NULL,?,?,?)";
 		PreparedStatement ps = getConn().prepareStatement(query);
 		ps.setString(1, bezeichnung);
 		ps.setInt(2, k.getId());
 		ps.setInt(3, b.getId());
 		ps.executeQuery();
-		String query_id = "select max(ID) from Kita";
+		String query_id = "select max(ID) as ID from Kita";
 		ResultSet rs = executeStatement(query_id);
 		int id = -1;
 		while(rs.next()){
