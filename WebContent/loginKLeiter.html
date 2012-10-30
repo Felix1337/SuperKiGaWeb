@@ -18,8 +18,8 @@
 				<a class="brand" href="#"><img src="/images/navbar-logo.png" /></a>
 				<div class="nav-collapse">
 					<ul class="nav">
-						<li><a href="/TwitterKiGaV/bootstrap/index.html">Home</a></li>
-						<li><a href="/TwitterKiGaV/bootstrap/login.html">Anmelden</a></li>
+						<li><a href="/SuperKiGaWeb/TestServlet?site=index.html">Home</a></li>
+						<li><a href="/SuperKiGaWeb/TestServlet?site=login.html">Anmelden</a></li>
 						<li class="active"><a href="/#">Leiter Log-In</a></li>
 					</ul>
 				</div>
@@ -54,8 +54,10 @@
 		<div class="span3"></div>
 		<div class="span6">
 			<fieldset class="buttons">
-   				<a href="/TwitterKiGaV/bootstrap/index.html"><input class="submit button" id="cancel" name="cancel" type="submit" value="Abbrechen" /></a>
-   				<input type="submit" value="Anmelden" class="submit button selected" id="allow">
+   				<a href="/SuperKiGaWeb/TestServlet?site=index.html"><input class="submit button" id="cancel" name="cancel" type="submit" value="Abbrechen" /></a>
+   				<Form Action="/SuperKiGaWeb/TestServlet" Method="POST">
+   					<input type="submit" value="AnmeldenLeiter" class="submit button selected" id="allow">
+   				</Form>
    			</fieldset>
    		</div>
 	</div>

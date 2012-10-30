@@ -7,7 +7,6 @@ import impl.KindImpl;
 import impl.KitaImpl;
 import impl.RechnungImpl;
 import impl.SonderleistungImpl;
-import impl.TageszeitImpl;
 import interfaces.Bundesland;
 import interfaces.Elternteil;
 import interfaces.Gruppe;
@@ -16,7 +15,6 @@ import interfaces.Kind;
 import interfaces.Kita;
 import interfaces.Rechnung;
 import interfaces.Sonderleistung;
-import interfaces.Tageszeit;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,13 +30,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import sun.font.SunFontManager.FamilyDescription;
-
 /**
  * Die Klasse ist für die Verbindung mit der Oracle-DB zuständig
  * Denkt bitte an {@link #connect()} UND {@link #disconnect()} !!!
- *	@author <a href=mailto:anton.romanov@haw-hamburg.de>Anton Romanov</a>
- *	@version 1.4 <br>Stand 27.10.2012
+ *	@author Anton Romanov (anton.romanov@haw-hamburg.de)
+ *	@version 1.3 <br>Stand 23.10.2012
  */
 
 public class DBConnectorImpl {
@@ -109,20 +105,6 @@ public class DBConnectorImpl {
 		Statement st = getConn().createStatement();
 		return st.executeQuery(s);
 	}
-	
-	private String toMD5(String md5) {
-		   try {
-		        java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
-		        byte[] array = md.digest(md5.getBytes());
-		        StringBuffer sb = new StringBuffer();
-		        for (int i = 0; i < array.length; ++i) {
-		          sb.append(Integer.toHexString((array[i] & 0xFF) | 0x100).substring(1,3));
-		       }
-		        return sb.toString();
-		    } catch (java.security.NoSuchAlgorithmException e) {
-		    }
-		    return null;
-		}
 
 	/*
 	 * API
@@ -197,16 +179,16 @@ public class DBConnectorImpl {
 	}
 	
 	public Gruppe getGruppeByID(int gruppe_id) throws SQLException{
-		String query = "SELECT g.Bezeichnung as GBez, g.Stunden as std, t.id as TID FROM Gruppe g, Tageszeit t where g.Tageszeit = t.ID and g.ID = ?";
+		String query = "SELECT Gruppe.Bezeichnung as GBez, Gruppe.Stunden as std, Tageszeit.Bezeichnung as TBez FROM Gruppe JOIN Tageszeit ON Gruppe.Tageszeit = Tageszeit.ID WHERE Gruppe.ID = ?";
 		PreparedStatement ps = getConn().prepareStatement(query);
 		ps.setInt(1, gruppe_id);
 		ResultSet rs = ps.executeQuery();
 		String bezeichnung = "";
-		Tageszeit tageszeit = null;
+		String tageszeit = "";
 		int stunden = -1;
 		while(rs.next()){
 			bezeichnung = rs.getString("GBez");
-			tageszeit = getTageszeitById(rs.getInt("TID"));
+			tageszeit = rs.getString("TBez");
 			stunden = rs.getInt("std");
 		}
 		return new GruppeImpl(bezeichnung, gruppe_id, tageszeit,stunden);
@@ -255,32 +237,6 @@ public class DBConnectorImpl {
 		return kitas;
 	}
 	
-	public Kita addKita(String bezeichnung, KLeiter k, Bundesland b) throws SQLException{
-		String query = "insert into Kita(ID,Bezeichnung,KLeiter,Bundesland) values(NULL,?,?,?)";
-		PreparedStatement ps = getConn().prepareStatement(query);
-		ps.setString(1, bezeichnung);
-		ps.setInt(2, k.getId());
-		ps.setInt(3, b.getId());
-		ps.executeQuery();
-		String query_id = "select max(ID) as ID from Kita";
-		ResultSet rs = executeStatement(query_id);
-		int id = -1;
-		while(rs.next()){
-			id = rs.getInt("ID");
-		}
-		return getKitaByID(id);
-	}
-	
-	public Kita updateKita(Kita kita, String bezeichnung, KLeiter k, Bundesland b) throws SQLException{
-		String query = "update Kita set bezeichnung=?, kleiter=?, bundesland=? where ID=?";
-		PreparedStatement ps = getConn().prepareStatement(query);
-		ps.setString(1, bezeichnung);
-		ps.setInt(2, k.getId());
-		ps.setInt(3, b.getId());
-		ps.setInt(4, kita.getId());
-		ps.executeQuery();
-		return getKitaByID(kita.getId());
-	}
 	
 	/*
 	 * Kind
@@ -513,18 +469,6 @@ public class DBConnectorImpl {
 		return kind;
 	}
 	
-	public Kind updateKind(Kind k, String vorame, String nachname, Calendar gDatum, int anzahlFamMit, Elternteil e) throws SQLException{
-		String query = "update Kind set vorname=?, nachname=?, geburtsdatum=?, familie=?, elternteil=? where ID=?";
-		PreparedStatement ps = getConn().prepareStatement(query);
-		ps.setString(1, vorame);
-		ps.setString(2, nachname);
-		ps.setString(3, String.valueOf(gDatum.getTime().getDay())+"."+String.valueOf(gDatum.getTime().getMonth())+"."+String.valueOf(gDatum.getTime().getYear()));
-		ps.setInt(4, anzahlFamMit);
-		ps.setInt(5,e.getId());
-		ps.setInt(6,k.getId());
-		ps.executeQuery();
-		return getKindByID(k.getId());
-	}
 	
 	
 	/*
@@ -680,7 +624,7 @@ public class DBConnectorImpl {
 		ps.setString(1, vorname);
 		ps.setString(2, nachname);
 		ps.setString(3, benutzername);
-		ps.setString(4, toMD5(passwort));
+		ps.setString(4, passwort);
 		ps.execute();
 		getConn().commit();
 		String select_query = "select max(id) as ID from KLeiter";
@@ -702,27 +646,6 @@ public class DBConnectorImpl {
 			kl_id = rs.getInt("KLeiter");
 		}
 		return getKLeiterByID(kl_id);
-	}
-	/**
-	 * Falls das Einloggen nicht erfolgreich war, wird -1 zurückgegeben !!!
-	 * 
-	 * @param benutzername Benutzername des KLeiters
-	 * @param passwort Passwort des KLeiters
-	 * @return ID des KLeiters wenn erfolgreich, -1 sonst
-	 * @throws SQLException
-	 */
-	public int authentifizierenKLeiter(String benutzername, String passwort) throws SQLException{
-		int id = -1;
-		String md5password = toMD5(passwort);
-		String query = "select ID from KLeiter where Benutzername=? and Passwort=?";
-		PreparedStatement ps = getConn().prepareStatement(query);
-		ps.setString(1, benutzername);
-		ps.setString(2, md5password);
-		ResultSet rs = ps.executeQuery();
-		while(rs.next()){
-			id = rs.getInt("ID");
-		}
-		return id;
 	}
 	
 	/*
@@ -779,7 +702,7 @@ public class DBConnectorImpl {
 		ps.setString(3, geschlecht);
 		ps.setDouble(4, gehalt);
 		ps.setString(5, benutzername);
-		ps.setString(6, toMD5(passwort));
+		ps.setString(6, passwort);
 		ps.execute();
 		getConn().commit();
 		String query_id = "select max(id) as ID from Elternteil";
@@ -789,41 +712,6 @@ public class DBConnectorImpl {
 			id = rs.getInt("ID");
 		}
 		return getElternteilById(id);
-	}
-	
-	/**
-	 * Diese Methode prüft, ob der Benutzer mit "password" und "benutzername" in der DB exisitiert
-	 * Falls die Authentifizierung nicht erfolgreich war, wird -1 zurückgegeben!!!
-	 * 
-	 * @param benutzername Benutzername der Eltern
-	 * @param password Passwort der Eltern
-	 * @return ID des benutzers wenn erfolgreich. -1 sonst
-	 * @throws SQLException
-	 */
-	public int authentifizierenElternteil(String benutzername, String password) throws SQLException{
-		int id = -1;
-		String md5password = toMD5(password);
-		String query = "select ID from Elternteil where Benutzername=? and Passwort=?";
-		PreparedStatement ps = getConn().prepareStatement(query);
-		ps.setString(1,benutzername);
-		ps.setString(2, md5password);
-		ResultSet rs = ps.executeQuery();
-		while(rs.next()){
-			id = rs.getInt("ID");
-		}
-		return id;
-	}
-	
-	public Elternteil updateElternteil(Elternteil e, String vorname, String nachname, String geschlecht, double gehalt) throws SQLException{
-		String query = "update Elternteil set vorname=?, nachname=?, gehalt=?, geschlecht=? where ID=?";
-		PreparedStatement ps = getConn().prepareStatement(query);
-		ps.setString(1, vorname);
-		ps.setString(2, nachname);
-		ps.setDouble(3, gehalt);
-		ps.setString(4, geschlecht);
-		ps.setInt(5, e.getId());
-		ps.executeQuery();
-		return getElternteilById(e.getId());
 	}
 	
 	/*
@@ -842,18 +730,4 @@ public class DBConnectorImpl {
 		return bundesland;
 	}
 	
-	/*
-	 * Tageszeit
-	 */
-	public Tageszeit getTageszeitById(int id) throws SQLException{
-		String query = "select bezeichnung from tageszeit where id =?";
-		PreparedStatement ps = getConn().prepareStatement(query);
-		ps.setInt(1, id);
-		ResultSet rs = ps.executeQuery();
-		Tageszeit result = null;
-		while(rs.next()){
-			result = new TageszeitImpl(id, rs.getString("Bezeichnung"));
-		}
-		return result;
-	}
 }

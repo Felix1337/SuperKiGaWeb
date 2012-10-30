@@ -8,7 +8,7 @@ public interface Gruppe {
 	
 	public String toString();
 
-	public Tageszeit getZeit();
+	public String getZeit();
 
 	public int getStunden();
 }
