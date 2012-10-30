@@ -55,7 +55,7 @@ public class Gui {
 	private JTextField textFieldGehalt;
 	private Logic l;
 	private ArrayList<Kita> kitas = new ArrayList<Kita>();
-	private Gruppe dummiGroup = new GruppeImpl("",9999,"nachts",4);
+	private Gruppe dummiGroup = new GruppeImpl("",9999,new TageszeitImpl(-1, ""),4);
 	private Kita dummiKita = new KitaImpl("",9999, new KLeiterImpl(-1, "", ""), new BundeslandImpl(-1, "", ""));
         private Elternteil dummiElternteil = new ElternteilImpl(9999, "", "", 0, "");
 	private Kind dummiKid = new KindImpl("","",Calendar.getInstance(),9999,3, dummiElternteil);

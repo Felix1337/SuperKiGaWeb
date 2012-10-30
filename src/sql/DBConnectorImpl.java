@@ -7,6 +7,7 @@ import impl.KindImpl;
 import impl.KitaImpl;
 import impl.RechnungImpl;
 import impl.SonderleistungImpl;
+import impl.TageszeitImpl;
 import interfaces.Bundesland;
 import interfaces.Elternteil;
 import interfaces.Gruppe;
@@ -15,6 +16,7 @@ import interfaces.Kind;
 import interfaces.Kita;
 import interfaces.Rechnung;
 import interfaces.Sonderleistung;
+import interfaces.Tageszeit;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -195,16 +197,16 @@ public class DBConnectorImpl {
 	}
 	
 	public Gruppe getGruppeByID(int gruppe_id) throws SQLException{
-		String query = "SELECT Gruppe.Bezeichnung as GBez, Gruppe.Stunden as std, Tageszeit.Bezeichnung as TBez FROM Gruppe JOIN Tageszeit ON Gruppe.Tageszeit = Tageszeit.ID WHERE Gruppe.ID = ?";
+		String query = "SELECT g.Bezeichnung as GBez, g.Stunden as std, t.id as TID FROM Gruppe g, Tageszeit t where g.Tageszeit = t.ID and g.ID = ?";
 		PreparedStatement ps = getConn().prepareStatement(query);
 		ps.setInt(1, gruppe_id);
 		ResultSet rs = ps.executeQuery();
 		String bezeichnung = "";
-		String tageszeit = "";
+		Tageszeit tageszeit = null;
 		int stunden = -1;
 		while(rs.next()){
 			bezeichnung = rs.getString("GBez");
-			tageszeit = rs.getString("TBez");
+			tageszeit = getTageszeitById(rs.getInt("TID"));
 			stunden = rs.getInt("std");
 		}
 		return new GruppeImpl(bezeichnung, gruppe_id, tageszeit,stunden);
@@ -840,4 +842,18 @@ public class DBConnectorImpl {
 		return bundesland;
 	}
 	
+	/*
+	 * Tageszeit
+	 */
+	public Tageszeit getTageszeitById(int id) throws SQLException{
+		String query = "select bezeichnung from tageszeit where id =?";
+		PreparedStatement ps = getConn().prepareStatement(query);
+		ps.setInt(1, id);
+		ResultSet rs = ps.executeQuery();
+		Tageszeit result = null;
+		while(rs.next()){
+			result = new TageszeitImpl(id, rs.getString("Bezeichnung"));
+		}
+		return result;
+	}
 }
